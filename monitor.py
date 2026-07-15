@@ -11,14 +11,12 @@ import json
 import hashlib
 import os
 import re
-import smtplib
 import sys
 import time
 from datetime import datetime, timezone
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 from urllib.parse import urljoin, urlparse
 
+import resend
 import requests
 from bs4 import BeautifulSoup
 
@@ -266,32 +264,31 @@ def build_report(results: list[dict]) -> tuple[str | None, str | None]:
 # ---------------------------------------------------------------------------
 
 def send_email(subject: str, body: str) -> None:
-    smtp_server  = os.environ.get("SMTP_SERVER", "smtp.gmail.com")
-    smtp_port    = int(os.environ.get("SMTP_PORT", "587"))
-    smtp_user    = os.environ.get("SMTP_USER", "")
-    smtp_pass    = os.environ.get("SMTP_PASSWORD", "")
-    email_to     = os.environ.get("EMAIL_TO", "")
-    email_from   = os.environ.get("EMAIL_FROM", smtp_user)
+    api_key    = os.environ.get("RESEND_API_KEY", "")
+    email_to   = os.environ.get("EMAIL_TO", "")
+    email_from = os.environ.get("EMAIL_FROM", "Meeting Monitor <onboarding@resend.dev>")
 
-    if not all([smtp_user, smtp_pass, email_to]):
-        print("\n[!] Email credentials not configured — printing report:\n")
+    if not all([api_key, email_to]):
+        print("\n[!] Resend credentials not configured — printing report:\n")
         print(f"Subject: {subject}\n")
         print(body)
         return
 
-    msg = MIMEMultipart()
-    msg["From"] = email_from
-    msg["To"] = email_to
-    msg["Subject"] = subject
-    msg.attach(MIMEText(body, "plain", "utf-8"))
+    resend.api_key = api_key
 
-    with smtplib.SMTP(smtp_server, smtp_port) as server:
-        server.ehlo()
-        server.starttls()
-        server.ehlo()
-        server.login(smtp_user, smtp_pass)
-        server.send_message(msg)
+    # Convert plain text body to simple HTML for better formatting
+    html_body = "<pre style=\"font-family: monospace; white-space: pre-wrap;\">"
+    html_body += body.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    html_body += "</pre>"
 
+    params: resend.Emails.SendParams = {
+        "from": email_from,
+        "to": [email_to],
+        "subject": subject,
+        "html": html_body,
+    }
+
+    resend.Emails.send(params)
     print(f"Email sent to {email_to}")
 
 

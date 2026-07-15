@@ -32,13 +32,11 @@ git push -u origin main
 
 Or just click **Use this template** if you've made it a template repo.
 
-### 2. Set up email (Gmail example)
+### 2. Set up Resend (email delivery)
 
-You'll need a Gmail **App Password** — your regular password won't work.
-
-1. Go to https://myaccount.google.com/apppasswords
-   (requires 2-factor authentication to be enabled on your Google account)
-2. Create a new app password and copy it.
+1. Sign up at https://resend.com (free tier — 3,000 emails/month)
+2. Go to https://resend.com/api-keys and create an API key
+3. Copy the key (it starts with `re_`)
 
 ### 3. Add secrets to GitHub
 
@@ -46,11 +44,10 @@ Go to your repo → **Settings** → **Secrets and variables** → **Actions** �
 
 | Secret | Value |
 |---|---|
-| `SMTP_SERVER` | `smtp.gmail.com` |
-| `SMTP_PORT` | `587` |
-| `SMTP_USER` | `yourname@gmail.com` |
-| `SMTP_PASSWORD` | The app password from step 2 |
-| `EMAIL_TO` | `yourname@gmail.com` (can be any address) |
+| `RESEND_API_KEY` | The API key from step 2 |
+| `EMAIL_TO` | The address you want reports sent to |
+
+That's it — just two secrets. On the free tier (no custom domain), emails arrive from `onboarding@resend.dev`. If you later add a verified domain in Resend, you can set an `EMAIL_FROM` secret to use your own sender address.
 
 ### 4. Test it
 
@@ -85,17 +82,6 @@ Useful examples:
 - `"0 13 * * 1,3,5"` — Mon / Wed / Fri
 - `"0 */6 * * *"` — every 6 hours
 
-### Use a different email provider
-
-Set `SMTP_SERVER` and `SMTP_PORT` to your provider's values. Common ones:
-
-| Provider | Server | Port |
-|---|---|---|
-| Gmail | `smtp.gmail.com` | `587` |
-| Outlook / Hotmail | `smtp.office365.com` | `587` |
-| Yahoo | `smtp.mail.yahoo.com` | `587` |
-| Fastmail | `smtp.fastmail.com` | `587` |
-
 ## Run locally
 
 ```bash
@@ -105,11 +91,8 @@ pip install -r requirements.txt
 python monitor.py
 
 # With email:
-SMTP_SERVER=smtp.gmail.com \
-SMTP_PORT=587 \
-SMTP_USER=you@gmail.com \
-SMTP_PASSWORD=your-app-password \
-EMAIL_TO=you@gmail.com \
+RESEND_API_KEY=re_your_key_here \
+EMAIL_TO=you@example.com \
 python monitor.py
 ```
 
