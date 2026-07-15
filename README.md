@@ -1,5 +1,6 @@
 # Municipal Meeting Minutes Monitor
 
+_Written with Claude Opus 4.6_
 Automatically checks local government websites for new meeting minutes, agendas, and documents. Sends you an email when something changes. Runs daily via GitHub Actions — no server required.
 
 ## Monitored sites
