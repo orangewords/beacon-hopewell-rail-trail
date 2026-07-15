@@ -1,0 +1,45 @@
+name: Check Meeting Minutes
+
+on:
+  schedule:
+    # Runs daily at 9:00 AM Eastern (13:00 UTC)
+    # Adjust the hour to your preference.  GitHub uses UTC.
+    - cron: "0 13 * * *"
+
+  # Allow manual runs from the Actions tab
+  workflow_dispatch:
+
+# Give the job permission to push snapshot updates back to the repo
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run monitor
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          EMAIL_TO:       ${{ secrets.EMAIL_TO }}
+        run: python monitor.py
+
+      - name: Commit updated snapshots
+        run: |
+          git config user.name  "meeting-monitor[bot]"
+          git config user.email "meeting-monitor[bot]@users.noreply.github.com"
+          git add snapshots/
+          # Only commit if there are actual changes
+          git diff --staged --quiet || git commit -m "Update snapshots — $(date -u +%Y-%m-%d)"
+          git push
