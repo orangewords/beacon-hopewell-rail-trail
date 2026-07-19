@@ -1,5 +1,5 @@
 {
-  "content_hash": "3a2079efc2db6f88b9a52b78562182c4be692b3f2b53ad05a83f7039921c2a70",
+  "content_hash": "cfc444e0b74a59e5e8b4b7fc0ab0fa7cf86dae03b1128002b02105990c8a759c",
   "links": [
     {
       "url": "https://fishkilltownny.iqm2.com/Citizens/calendar.aspx",
@@ -34,6 +34,11 @@
     {
       "url": "https://fishkilltownny.iqm2.com/Citizens/Detail_Meeting.aspx?ID=1919",
       "text": "Aug 13, 2026 7:00 PM",
+      "is_document": false
+    },
+    {
+      "url": "https://fishkilltownny.iqm2.com/Citizens/Detail_Meeting.aspx?ID=1932",
+      "text": "Aug 18, 2026 7:00 PM",
       "is_document": false
     },
     {
@@ -108,6 +113,6 @@
     }
   ],
   "searched_docs": [],
-  "last_checked": "2026-07-18T14:19:54.378218+00:00",
+  "last_checked": "2026-07-19T14:23:38.661003+00:00",
   "url": "https://fishkilltownny.iqm2.com/Citizens/default.aspx"
 }
