@@ -9,6 +9,7 @@ reporting matches with page numbers, sentences, and surrounding context.
 Designed to run as a daily GitHub Actions cron job.
 """
 
+import difflib
 import io
 import json
 import hashlib
@@ -27,8 +28,9 @@ from pypdf import PdfReader
 SNAPSHOTS_DIR = "snapshots"
 SITES_FILE = "sites.json"
 REQUEST_TIMEOUT = 30
-REQUEST_DELAY = 2        # seconds between requests (be polite)
-MAX_PDF_SIZE = 50_000_000  # 50 MB — skip anything larger
+REQUEST_DELAY = 2            # seconds between requests (be polite)
+MAX_PDF_SIZE = 50_000_000    # 50 MB — skip anything larger
+MAX_PDFS_PER_SITE = 15       # limit PDF downloads per site per run
 
 DOCUMENT_EXTENSIONS = {".pdf", ".doc", ".docx", ".xlsx", ".xls", ".csv", ".pptx"}
 MEETING_KEYWORDS = {"agenda", "minute", "meeting", "resolution", "hearing", "session", "board"}
@@ -76,6 +78,53 @@ def save_snapshot(site_id: str, data: dict) -> None:
     path = os.path.join(SNAPSHOTS_DIR, f"{site_id}.json")
     with open(path, "w") as f:
         json.dump(data, f, indent=2)
+
+
+# ---------------------------------------------------------------------------
+# Content diffing
+# ---------------------------------------------------------------------------
+
+def compute_new_content(old_text: str, new_text: str) -> list[str]:
+    """
+    Compare old and new page text, returning blocks of text that
+    appear in the new version but not the old.  Filters out trivial
+    changes like whitespace or single-word differences.
+    """
+    old_lines = old_text.splitlines()
+    new_lines = new_text.splitlines()
+
+    differ = difflib.unified_diff(old_lines, new_lines, n=0, lineterm="")
+
+    added_lines: list[str] = []
+    for line in differ:
+        # Lines starting with '+' (but not '+++') are additions
+        if line.startswith("+") and not line.startswith("+++"):
+            content = line[1:].strip()
+            if content and len(content) > 3:  # skip trivial fragments
+                added_lines.append(content)
+
+    if not added_lines:
+        return []
+
+    # Group consecutive added lines into blocks
+    blocks: list[str] = []
+    current_block: list[str] = []
+
+    for line in added_lines:
+        current_block.append(line)
+
+    # Join all added lines into coherent text, then split into
+    # paragraph-like blocks on large gaps
+    full_text = "\n".join(current_block)
+    raw_blocks = re.split(r"\n{2,}", full_text)
+
+    for block in raw_blocks:
+        cleaned = block.strip()
+        # Skip blocks that are just dates, single words, or nav artifacts
+        if cleaned and len(cleaned) > 10:
+            blocks.append(cleaned)
+
+    return blocks
 
 
 # ---------------------------------------------------------------------------
@@ -141,13 +190,11 @@ def extract_content(html: str, base_url: str) -> tuple[str, list[dict]]:
 # ---------------------------------------------------------------------------
 
 def download_pdf(url: str) -> bytes | None:
-    """Download a PDF and return its bytes, or None on failure."""
     headers = {"User-Agent": USER_AGENT}
     try:
         resp = requests.get(url, headers=headers, timeout=60, stream=True)
         resp.raise_for_status()
 
-        # Check size from header before downloading the whole thing
         content_length = resp.headers.get("Content-Length")
         if content_length and int(content_length) > MAX_PDF_SIZE:
             print(f"      Skipping (too large: {int(content_length) // 1_000_000} MB)")
@@ -164,7 +211,6 @@ def download_pdf(url: str) -> bytes | None:
 
 
 def extract_pdf_text_by_page(pdf_bytes: bytes) -> list[tuple[int, str]]:
-    """Extract text from a PDF, returning [(page_number, text), ...]."""
     try:
         reader = PdfReader(io.BytesIO(pdf_bytes))
         pages = []
@@ -179,16 +225,10 @@ def extract_pdf_text_by_page(pdf_bytes: bytes) -> list[tuple[int, str]]:
 
 
 def find_phrase_matches(pages: list[tuple[int, str]], phrase: str) -> list[dict]:
-    """
-    Search extracted PDF pages for a phrase (case-insensitive).
-    Returns a list of match dicts with page, sentence, and paragraph context.
-    """
     matches = []
     phrase_lower = phrase.lower()
 
     for page_num, page_text in pages:
-        # Split into paragraphs (blocks of text separated by blank lines
-        # or multiple newlines)
         paragraphs = re.split(r"\n\s*\n", page_text)
 
         for para in paragraphs:
@@ -199,16 +239,12 @@ def find_phrase_matches(pages: list[tuple[int, str]], phrase: str) -> list[dict]
             if not para_clean:
                 continue
 
-            # Extract individual sentences that contain the phrase
-            # Split on sentence-ending punctuation followed by a space
             sentences = re.split(r"(?<=[.!?])\s+", para_clean)
             matching_sentences = [
                 s.strip() for s in sentences
                 if phrase_lower in s.lower() and s.strip()
             ]
 
-            # If sentence splitting didn't isolate anything useful,
-            # fall back to the whole paragraph
             if not matching_sentences:
                 matching_sentences = [para_clean]
 
@@ -222,7 +258,6 @@ def find_phrase_matches(pages: list[tuple[int, str]], phrase: str) -> list[dict]
 
 
 def search_page_text(text: str, phrase: str) -> list[dict]:
-    """Search the HTML page's extracted text for a phrase."""
     phrase_lower = phrase.lower()
     if phrase_lower not in text.lower():
         return []
@@ -269,8 +304,9 @@ def check_site(site: dict, phrases: list[str]) -> dict:
         "changed": False,
         "is_new": False,
         "content_changed": False,
+        "new_content_blocks": [],  # blocks of text that are new on the page
         "new_links": [],
-        "keyword_matches": [],   # list of per-document/page match results
+        "keyword_matches": [],
         "error": None,
     }
 
@@ -286,10 +322,16 @@ def check_site(site: dict, phrases: list[str]) -> dict:
             result["changed"] = True
             result["new_links"] = links
         else:
+            # Compare content hash
             if content_hash != prev.get("content_hash"):
                 result["content_changed"] = True
                 result["changed"] = True
 
+                # Compute what actually changed
+                old_text = prev.get("page_text", "")
+                result["new_content_blocks"] = compute_new_content(old_text, text)
+
+            # Find newly appeared links
             prev_urls = {link["url"] for link in prev.get("links", [])}
             new_links = [link for link in links if link["url"] not in prev_urls]
             if new_links:
@@ -311,12 +353,13 @@ def check_site(site: dict, phrases: list[str]) -> dict:
                         "matches": page_matches,
                     })
 
-        # 2. Search new PDF documents
+        # 2. Search new PDF documents (with limit)
         prev_searched = set()
         if prev:
             prev_searched = set(prev.get("searched_docs", []))
 
         searched_docs = list(prev_searched)
+        pdfs_downloaded = 0
 
         for link in result["new_links"]:
             link_url = link["url"]
@@ -326,10 +369,14 @@ def check_site(site: dict, phrases: list[str]) -> dict:
                 continue
             if link_url in prev_searched:
                 continue
+            if pdfs_downloaded >= MAX_PDFS_PER_SITE:
+                print(f"    Reached PDF limit ({MAX_PDFS_PER_SITE}), skipping remaining")
+                break
 
             print(f"    Downloading: {link['text']}... ", end="", flush=True)
             pdf_bytes = download_pdf(link_url)
             searched_docs.append(link_url)
+            pdfs_downloaded += 1
 
             if pdf_bytes is None:
                 print("skipped")
@@ -351,19 +398,19 @@ def check_site(site: dict, phrases: list[str]) -> dict:
                         "matches": doc_matches,
                     })
 
-            print()  # newline after status
+            print()
             time.sleep(REQUEST_DELAY)
 
-        # Persist snapshot (including which docs we've searched)
+        # Persist snapshot (including page text for future diffs)
         save_snapshot(site_id, {
             "content_hash": content_hash,
+            "page_text": text,
             "links": links,
             "searched_docs": searched_docs,
             "last_checked": datetime.now(timezone.utc).isoformat(),
             "url": url,
         })
 
-        # If we found keyword matches, ensure the result is marked as changed
         if result["keyword_matches"]:
             result["changed"] = True
 
@@ -378,12 +425,10 @@ def check_site(site: dict, phrases: list[str]) -> dict:
 # ---------------------------------------------------------------------------
 
 def esc(text: str) -> str:
-    """Escape HTML special characters."""
     return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
 def highlight_phrase(text: str, phrase: str) -> str:
-    """Escape text for HTML and wrap phrase matches in a highlight span."""
     escaped = esc(text)
     pattern = re.compile(re.escape(esc(phrase)), re.IGNORECASE)
     return pattern.sub(
@@ -396,7 +441,6 @@ def build_report(results: list[dict], phrases: list[str]) -> tuple[str | None, s
     changes = [r for r in results if r["changed"]]
     errors  = [r for r in results if r.get("error")]
 
-    # Collect all keyword matches across sites
     all_kw_matches = []
     for r in results:
         all_kw_matches.extend(r.get("keyword_matches", []))
@@ -407,7 +451,6 @@ def build_report(results: list[dict], phrases: list[str]) -> tuple[str | None, s
     now_str = datetime.now(timezone.utc).strftime("%B %d, %Y at %H:%M UTC")
     date_short = datetime.now(timezone.utc).strftime("%B %d, %Y")
 
-    # Adjust subject line if keyword matches were found
     if all_kw_matches:
         phrase_list = ", ".join(f'"{p}"' for p in phrases)
         subject = f'🔍 {phrase_list} mentioned — Meeting Minutes Update {date_short}'
@@ -443,22 +486,11 @@ def build_report(results: list[dict], phrases: list[str]) -> tuple[str | None, s
             source_url  = km["source_url"]
             phrase      = km["phrase"]
 
-            if source_type == "document":
-                html.append(f"""
+            label = "Document" if source_type == "document" else "Web page"
+            html.append(f"""
 <div style="margin-bottom:20px;">
 <p style="margin:0 0 4px;">
-  <strong>Document:</strong>
-  <a href="{esc(source_url)}" style="color:#2563eb;">{esc(source_name)}</a>
-</p>
-<p style="margin:0 0 8px; color:#555;">
-  Search term: <em>{esc(phrase)}</em>
-</p>
-""")
-            else:
-                html.append(f"""
-<div style="margin-bottom:20px;">
-<p style="margin:0 0 4px;">
-  <strong>Web page:</strong>
+  <strong>{label}:</strong>
   <a href="{esc(source_url)}" style="color:#2563eb;">{esc(source_name)}</a>
 </p>
 <p style="margin:0 0 8px; color:#555;">
@@ -470,7 +502,6 @@ def build_report(results: list[dict], phrases: list[str]) -> tuple[str | None, s
                 page = match["page"]
                 page_str = f" (Page {page})" if page else ""
 
-                # Highlighted sentences
                 for sentence in match["sentences"]:
                     html.append(f"""
 <div style="margin:8px 0; padding:8px 12px; background:#fff;
@@ -484,7 +515,6 @@ def build_report(results: list[dict], phrases: list[str]) -> tuple[str | None, s
 </div>
 """)
 
-                # Paragraph context (collapsed feel)
                 para_preview = match["paragraph"]
                 if len(para_preview) > 600:
                     para_preview = para_preview[:600] + "…"
@@ -501,7 +531,7 @@ def build_report(results: list[dict], phrases: list[str]) -> tuple[str | None, s
 </details>
 """)
 
-            html.append("</div>")  # close per-source div
+            html.append("</div>")
 
         html.append("</div>")  # close yellow box
 
@@ -526,6 +556,43 @@ def build_report(results: list[dict], phrases: list[str]) -> tuple[str | None, s
             elif c.get("content_changed"):
                 html.append('<p style="margin:4px 0; color:#666;">Page content changed since last check</p>')
 
+                # Show what specifically changed
+                new_blocks = c.get("new_content_blocks", [])
+                if new_blocks:
+                    html.append("""
+<div style="margin:8px 0; padding:10px; background:#e8f5e9;
+            border-left:3px solid #43a047; border-radius:2px;">
+  <p style="margin:0 0 6px; font-size:12px; color:#2e7d32; font-weight:bold;">
+    NEW CONTENT ADDED:
+  </p>
+""")
+                    for block in new_blocks[:10]:  # cap at 10 blocks
+                        display = block
+                        if len(display) > 400:
+                            display = display[:400] + "…"
+
+                        # Highlight search phrases in the new content too
+                        display_html = esc(display)
+                        for phrase in phrases:
+                            pattern = re.compile(re.escape(esc(phrase)), re.IGNORECASE)
+                            display_html = pattern.sub(
+                                lambda m: f'<span style="background:#fff176;font-weight:bold;padding:1px 3px;">{m.group()}</span>',
+                                display_html,
+                            )
+
+                        html.append(f"""
+  <div style="margin:6px 0; padding:6px 10px; background:#fff;
+              border-radius:2px; font-size:14px; line-height:1.5;">
+    {display_html}
+  </div>
+""")
+
+                    if len(new_blocks) > 10:
+                        html.append(f'<p style="color:#666; font-size:13px;">…and {len(new_blocks) - 10} more block(s). Visit the site for full details.</p>')
+
+                    html.append("</div>")  # close green box
+
+            # New links
             if c.get("new_links"):
                 html.append(f'<p style="margin:8px 0 4px;"><strong>{len(c["new_links"])} new link(s):</strong></p>')
                 html.append('<ul style="margin:4px 0; padding-left:20px;">')
@@ -548,7 +615,7 @@ def build_report(results: list[dict], phrases: list[str]) -> tuple[str | None, s
         names = ", ".join(r["name"] for r in unchanged)
         html.append(f'<p style="margin-top:16px; color:#888;">Unchanged: {esc(names)}</p>')
 
-    html.append("</div>")  # close wrapper
+    html.append("</div>")
 
     return subject, "\n".join(html)
 
@@ -565,7 +632,6 @@ def send_email(subject: str, html_body: str) -> None:
     if not all([api_key, email_to]):
         print("\n[!] Resend credentials not configured — printing report:\n")
         print(f"Subject: {subject}\n")
-        # Strip tags for console output
         console_text = re.sub(r"<[^>]+>", "", html_body)
         console_text = re.sub(r"\n{3,}", "\n\n", console_text)
         print(console_text)
@@ -593,7 +659,8 @@ def main() -> None:
     phrases = get_search_phrases()
 
     print(f"Checking {len(sites)} site(s)...")
-    print(f"Searching for: {', '.join(phrases)}\n")
+    print(f"Searching for: {', '.join(phrases)}")
+    print(f"PDF limit per site: {MAX_PDFS_PER_SITE}\n")
 
     results: list[dict] = []
     for i, site in enumerate(sites):
@@ -605,8 +672,14 @@ def main() -> None:
             print(f"ERROR: {result['error']}")
         elif result["changed"]:
             kw_count = len(result.get("keyword_matches", []))
-            extra = f" ({kw_count} keyword match(es))" if kw_count else ""
-            print(f"changes detected{extra}")
+            new_blocks = len(result.get("new_content_blocks", []))
+            extras = []
+            if kw_count:
+                extras.append(f"{kw_count} keyword match(es)")
+            if new_blocks:
+                extras.append(f"{new_blocks} new content block(s)")
+            extra_str = f" ({', '.join(extras)})" if extras else ""
+            print(f"changes detected{extra_str}")
         else:
             print("no changes")
 
