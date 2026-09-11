@@ -1,6 +1,6 @@
 {
-  "content_hash": "994dbaa7abf9b0be122d7c2c437f0b0821c2c62566b60cf069407a70b25d2fbc",
-  "page_text": "Meeting Portal - Town of Fishkill, New York\n\u00abBack to Main Site\nWelcome\nMeetings\nBrowse\nMedia\nNotices\nBoards+\nLog in\n|\nHelp\nMeeting Group\nAll Meeting Groups\nPlanning Board\nTown Board\nZoning Board of Appeals\nPrint This Page\nWelcome to the On-Demand Meeting Portal for the\nTown of Fishkill, New York\n; your source for meeting agendas, detailed agenda packets, minutes, and videos.\nAgendas and minutes will open as PDF files when you select their links by meeting date.  Clicking on the meeting date will bring you to an outline view for that meeting that will also contain the links to those same PDF files as well as links to PDF files of individual meeting documents and attachments.\nUpcoming Meetings\nFull Calendar\nRSS\nSeptember, 2026\nSep 10, 2026 7:00 PM\nAgenda\nAgenda Packet\nMinutes\nMinutes Packet\nVideo\nPlanning Board - Regular Meeting\nSep 15, 2026 7:00 PM\nCancelled\nZoning Board of Appeals - Regular Meeting\nSep 16, 2026 7:00 PM\nAgenda\nAgenda Packet\nMinutes\nMinutes Packet\nVideo\nTown Board - Regular Meeting\nOctober, 2026\nOct 7, 2026 7:00 PM\nAgenda\nAgenda Packet\nMinutes\nMinutes Packet\nVideo\nTown Board - Regular Meeting\nOct 8, 2026 7:00 PM\nAgenda\nAgenda Packet\nMinutes\nMinutes Packet\nVideo\nPlanning Board - Regular Meeting\nSee more . . .\nPast Meetings\nFull Calendar\nRSS\nSeptember, 2026\nSep 2, 2026 7:00 PM\nAgenda\nAgenda Packet\nMinutes\nMinutes Packet\nVideo\nTown Board - Regular Meeting\nAugust, 2026\nAug 18, 2026 7:00 PM\nAgenda\nAgenda Packet\nMinutes\nMinutes Packet\nVideo\nZoning Board of Appeals - Regular Meeting\nAug 13, 2026 7:00 PM\nCancelled\nPlanning Board - Regular Meeting\nAug 5, 2026 7:00 PM\nAgenda\nAgenda Packet\nMinutes\nMinutes Packet\nVideo\nTown Board - Regular Meeting\nSee more . . .\nPowered by\nGranicus\nLegislative Files\nLegal Notices\nSome other Sort of Thing",
+  "content_hash": "700688a9b3809249c7956163abc5f19b4ea6f800c068317eb7bdf68c2dcadc8a",
+  "page_text": "Meeting Portal - Town of Fishkill, New York\n\u00abBack to Main Site\nWelcome\nMeetings\nBrowse\nMedia\nNotices\nBoards+\nLog in\n|\nHelp\nMeeting Group\nAll Meeting Groups\nPlanning Board\nTown Board\nZoning Board of Appeals\nPrint This Page\nWelcome to the On-Demand Meeting Portal for the\nTown of Fishkill, New York\n; your source for meeting agendas, detailed agenda packets, minutes, and videos.\nAgendas and minutes will open as PDF files when you select their links by meeting date.  Clicking on the meeting date will bring you to an outline view for that meeting that will also contain the links to those same PDF files as well as links to PDF files of individual meeting documents and attachments.\nUpcoming Meetings\nFull Calendar\nRSS\nSeptember, 2026\nSep 15, 2026 7:00 PM\nCancelled\nZoning Board of Appeals - Regular Meeting\nSep 16, 2026 7:00 PM\nAgenda\nAgenda Packet\nMinutes\nMinutes Packet\nVideo\nTown Board - Regular Meeting\nOctober, 2026\nOct 7, 2026 7:00 PM\nAgenda\nAgenda Packet\nMinutes\nMinutes Packet\nVideo\nTown Board - Regular Meeting\nOct 8, 2026 7:00 PM\nAgenda\nAgenda Packet\nMinutes\nMinutes Packet\nVideo\nPlanning Board - Regular Meeting\nSee more . . .\nPast Meetings\nFull Calendar\nRSS\nSeptember, 2026\nSep 10, 2026 7:00 PM\nAgenda\nAgenda Packet\nMinutes\nMinutes Packet\nVideo\nPlanning Board - Regular Meeting\nSep 2, 2026 7:00 PM\nAgenda\nAgenda Packet\nMinutes\nMinutes Packet\nVideo\nTown Board - Regular Meeting\nAugust, 2026\nAug 18, 2026 7:00 PM\nAgenda\nAgenda Packet\nMinutes\nMinutes Packet\nVideo\nZoning Board of Appeals - Regular Meeting\nAug 13, 2026 7:00 PM\nCancelled\nPlanning Board - Regular Meeting\nSee more . . .\nPowered by\nGranicus\nLegislative Files\nLegal Notices\nSome other Sort of Thing",
   "links": [
     {
       "url": "https://fishkilltownny.iqm2.com/Citizens/calendar.aspx",
@@ -10,21 +10,6 @@
     {
       "url": "https://fishkilltownny.iqm2.com/Citizens/Board",
       "text": "Boards+",
-      "is_document": false
-    },
-    {
-      "url": "https://fishkilltownny.iqm2.com/Citizens/Detail_Meeting.aspx?ID=1921",
-      "text": "Sep 10, 2026 7:00 PM",
-      "is_document": false
-    },
-    {
-      "url": "https://fishkilltownny.iqm2.com/Citizens/FileOpen.aspx?Type=14&ID=1862&Inline=True",
-      "text": "Agenda",
-      "is_document": false
-    },
-    {
-      "url": "https://fishkilltownny.iqm2.com/Citizens/FileOpen.aspx?Type=1&ID=1862&Inline=True",
-      "text": "Agenda Packet",
       "is_document": false
     },
     {
@@ -48,6 +33,21 @@
       "is_document": false
     },
     {
+      "url": "https://fishkilltownny.iqm2.com/Citizens/Detail_Meeting.aspx?ID=1921",
+      "text": "Sep 10, 2026 7:00 PM",
+      "is_document": false
+    },
+    {
+      "url": "https://fishkilltownny.iqm2.com/Citizens/FileOpen.aspx?Type=14&ID=1862&Inline=True",
+      "text": "Agenda",
+      "is_document": false
+    },
+    {
+      "url": "https://fishkilltownny.iqm2.com/Citizens/FileOpen.aspx?Type=1&ID=1862&Inline=True",
+      "text": "Agenda Packet",
+      "is_document": false
+    },
+    {
       "url": "https://fishkilltownny.iqm2.com/Citizens/Detail_Meeting.aspx?ID=1904",
       "text": "Sep 2, 2026 7:00 PM",
       "is_document": false
@@ -60,6 +60,16 @@
     {
       "url": "https://fishkilltownny.iqm2.com/Citizens/FileOpen.aspx?Type=1&ID=1865&Inline=True",
       "text": "Agenda Packet",
+      "is_document": false
+    },
+    {
+      "url": "https://fishkilltownny.iqm2.com/Citizens/FileOpen.aspx?Type=15&ID=2018&Inline=True",
+      "text": "Minutes",
+      "is_document": false
+    },
+    {
+      "url": "https://fishkilltownny.iqm2.com/Citizens/FileOpen.aspx?Type=12&ID=2018&Inline=True",
+      "text": "Minutes Packet",
       "is_document": false
     },
     {
@@ -81,34 +91,9 @@
       "url": "https://fishkilltownny.iqm2.com/Citizens/Detail_Meeting.aspx?ID=1919",
       "text": "Aug 13, 2026 7:00 PM",
       "is_document": false
-    },
-    {
-      "url": "https://fishkilltownny.iqm2.com/Citizens/Detail_Meeting.aspx?ID=1903",
-      "text": "Aug 5, 2026 7:00 PM",
-      "is_document": false
-    },
-    {
-      "url": "https://fishkilltownny.iqm2.com/Citizens/FileOpen.aspx?Type=14&ID=1863&Inline=True",
-      "text": "Agenda",
-      "is_document": false
-    },
-    {
-      "url": "https://fishkilltownny.iqm2.com/Citizens/FileOpen.aspx?Type=1&ID=1863&Inline=True",
-      "text": "Agenda Packet",
-      "is_document": false
-    },
-    {
-      "url": "https://fishkilltownny.iqm2.com/Citizens/FileOpen.aspx?Type=15&ID=2017&Inline=True",
-      "text": "Minutes",
-      "is_document": false
-    },
-    {
-      "url": "https://fishkilltownny.iqm2.com/Citizens/FileOpen.aspx?Type=12&ID=2017&Inline=True",
-      "text": "Minutes Packet",
-      "is_document": false
     }
   ],
   "searched_docs": [],
-  "last_checked": "2026-09-10T16:52:36.048309+00:00",
+  "last_checked": "2026-09-11T16:52:42.783497+00:00",
   "url": "https://fishkilltownny.iqm2.com/Citizens/default.aspx"
 }
