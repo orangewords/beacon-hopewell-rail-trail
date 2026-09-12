@@ -23,6 +23,16 @@
       "is_document": false
     },
     {
+      "url": "https://fishkilltownny.iqm2.com/Citizens/FileOpen.aspx?Type=14&ID=1866&Inline=True",
+      "text": "Agenda",
+      "is_document": false
+    },
+    {
+      "url": "https://fishkilltownny.iqm2.com/Citizens/FileOpen.aspx?Type=1&ID=1866&Inline=True",
+      "text": "Agenda Packet",
+      "is_document": false
+    },
+    {
       "url": "https://fishkilltownny.iqm2.com/Citizens/Detail_Meeting.aspx?ID=1906",
       "text": "Oct 7, 2026 7:00 PM",
       "is_document": false
@@ -94,6 +104,6 @@
     }
   ],
   "searched_docs": [],
-  "last_checked": "2026-09-11T16:52:42.783497+00:00",
+  "last_checked": "2026-09-12T15:58:33.803369+00:00",
   "url": "https://fishkilltownny.iqm2.com/Citizens/default.aspx"
 }
